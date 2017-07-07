@@ -3,6 +3,7 @@ defmodule Pgsub.Web.UserSocket do
 
   ## Channels
   # channel "room:*", Pgsub.Web.RoomChannel
+  channel "todo:*", Pgsub.Web.TodoChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
