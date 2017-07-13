@@ -1,7 +1,6 @@
 defmodule Pgsub.Web.TodoChannel do
   use Pgsub.Web, :channel
-  alias Pgsub.Pgsub.Todo
-  alias Pgsub.Repo
+  alias Pgsub.{Pgsub.Todo, Repo}
 
   def join("todo:list", payload, socket) do
     if authorized?(payload) do
@@ -12,7 +11,8 @@ defmodule Pgsub.Web.TodoChannel do
   end
 
   def handle_in("todos", _payload, socket) do
-    broadcast_all_to!(socket)
+    todos = Todo |> Repo.all
+    Pgsub.Web.Endpoint.broadcast!(socket.topic, "todos", %{todos: todos})
 
     {:noreply, socket}
   end
@@ -21,8 +21,6 @@ defmodule Pgsub.Web.TodoChannel do
     %Todo{}
     |> Todo.changeset(data)
     |> Repo.insert!
-
-    broadcast_all_to!(socket)
 
     {:noreply, socket}
   end
@@ -33,8 +31,6 @@ defmodule Pgsub.Web.TodoChannel do
     |> Todo.changeset(data)
     |> Repo.update!
 
-    broadcast_all_to!(socket)
-
     {:noreply, socket}
   end
 
@@ -43,17 +39,10 @@ defmodule Pgsub.Web.TodoChannel do
     |> Repo.get(data["id"])
     |> Repo.delete!
 
-    broadcast_all_to!(socket)
-
     {:noreply, socket}
   end
 
   defp authorized?(_payload) do
     true
-  end
-
-  defp broadcast_all_to!(socket) do
-    todos = Todo |> Repo.all
-    Pgsub.Web.Endpoint.broadcast!(socket.topic, "todos", %{todos: todos})
   end
 end
