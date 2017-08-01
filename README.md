@@ -8,21 +8,24 @@ we looked at a way to build a naturally scalable real-time application using
 [RethinkDB](http://rethinkdb.com) and [Elm](http://elm-lang.org). Turned out
 RethinkDB makes going real-time quite simple and relatively painless. However,
 an interesting question occurred as a follow-up to that article: can we do the
-same with PostgreSQL? Then short answer is yes, we can. But is it that simple?
-Well let's see it for ourselves.
+same with PostgreSQL? The short answer is yes, we can. But is it that simple?
+Well, let's see it for ourselves.
 
 ## Fast-forward
 
 Since we have already described the motivation behind these experiments with
 the real-time applications based on Elixir, Phoenix and Elm, as well as the
 setup process, in the
-[original article](https://github.com/bredikhin/phoenix-rethinkdb-elm-webpack-example),
-we'll just go quickly over the trivial parts of the setup here to reach the
-point where we can discuss something new:
+[original article](https://github.com/bredikhin/phoenix-rethinkdb-elm-webpack-example)
+(which you should check for more in-depth instructions), we'll just go quickly
+over the trivial parts of the setup here to reach the point where we can
+discuss something new:
 
-- create a new Phoenix Project: `mix phx.new pgsub`;
+- create a new Phoenix project (we will be using v1.3 of the Phoenix Framework,
+the last one at the moment of this writing): `mix phx.new pgsub && cd pgsub`;
+- initialize Git repository: `git init`;
 - get the dependencies: `mix deps.get`;
-- make sure the PostgreSQL server is running: download your type of package
+- make sure that PostgreSQL server is running: download your type of package
 from [here](https://www.postgresql.org/download/) or just follow one of the
 [guides](https://wiki.postgresql.org/wiki/Detailed_installation_guides) if
 you haven't installed it yet;
@@ -31,13 +34,13 @@ the first time as well);
 - generate the repo / schema / migration: `mix phx.gen.schema Pgsub.Todo todos task:string completed:boolean`;
 - migrate: `mix ecto.migrate`;
 - remove Brunch.js: `rm assets/brunch-config.js`;
-- add Webpack with loaders / plugins: `curl https://raw.githubusercontent.com/bredikhin/phoenix-rethinkdb-elm-webpack-example/master/assets/package.json > assets/package.json`
-- install npm deps: `cd assets && npm i`
-- configure webpack: `curl https://raw.githubusercontent.com/bredikhin/phoenix-rethinkdb-elm-webpack-example/master/assets/webpack.config.js > assets/webpack.config.js`
-- edit `config/dev.exs`, replace the watchers line with the following: `watchers: [npm: ["run", "watch", cd: Path.expand("../assets", __DIR__)]]`
-- add the frontend Elm app: `git remote add example git@github.com:bredikhin/phoenix-rethinkdb-elm-webpack-example.git && git fetch example && git checkout example/master elm`
-- get Elm dependenciess: `cd elm && elm package install -y`
-- switch the CSS file: `git checkout example/master assets/css/app.css`
+- add Webpack with loaders / plugins: `curl https://raw.githubusercontent.com/bredikhin/phoenix-rethinkdb-elm-webpack-example/master/assets/package.json > assets/package.json`;
+- install npm dependencies: `cd assets && npm i && cd ..`;
+- configure Webpack: `curl https://raw.githubusercontent.com/bredikhin/phoenix-rethinkdb-elm-webpack-example/master/assets/webpack.config.js > assets/webpack.config.js`;
+- edit `config/dev.exs`, replace the watchers line with the following: `watchers: [npm: ["run", "watch", cd: Path.expand("../assets", __DIR__)]]`;
+- add the frontend Elm app: `git remote add example git@github.com:bredikhin/phoenix-rethinkdb-elm-webpack-example.git && git fetch example && git checkout example/master elm`;
+- get Elm dependencies: `cd elm && elm package install -y && cd ..`;
+- switch the CSS file: `git checkout example/master assets/css/app.css`;
 - clean up the page template in `lib/pgsub/web/templates/layout/app.html.eex`:
 ```
 ...
@@ -52,8 +55,9 @@ the first time as well);
 let Elm = require('../../elm/Todo.elm')
 let todomvc = Elm.Todo.fullscreen()
 ```
-- create a channel: `mix phx.gen.channel Todo`
-- add our channel to the socket handler in `lib/pgsub/web/channels/user_socket.ex`: `channel "todo:*", Pgsub.Web.TodoChannel`
+- create a channel: `mix phx.gen.channel Todo`;
+- add your channel to the socket handler in `lib/pgsub/web/channels/user_socket.ex`:
+`channel "todo:*", Pgsub.Web.TodoChannel`.
 
 ## Ecto and channel broadcasting
 
@@ -128,10 +132,10 @@ but the good news is that thanks to the power of Ecto the code we just wrote
 will work with a great number of database engines having Ecto adapters. Isn't
 it amazing?
 
-Another good news is that if you start your Phoenix server based on this channel
-code and open http://localhost:4000/ in two browser tabs, you'll see that the
-changes you make in one tab make the other one instantly updated. So, does it
-mean we have reached our initial goal?
+What's good as well is that if you start your Phoenix server based on this
+channel code and open http://localhost:4000/ in two browser tabs, you'll see
+that the changes you make in one tab get the other one instantly updated. So,
+does it mean we have reached our initial goal?
 
 Well, not exactly, since these real-time updates are based on the fact that we
 have a single Phoenix server acting as a hub for all our changes and having all
@@ -159,7 +163,7 @@ those commands as we go.
 
 First, in order to get notified about some specific changes in the database
 (described by a trigger), let's create a trigger handler in PostgreSQL.
-Connect to you database (which would be named `pgsub_dev` by default) with some
+Connect to your database (which would be named `pgsub_dev` by default) with some
 kind of a query tool
 (e.g. [`psql`](https://www.postgresql.org/docs/current/static/app-psql.html),
 you'd have to start it with something like `psql -d pgsub_dev -w`, or you can
@@ -189,7 +193,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 ```
-What is happening here is that we're building a JSON-encoded modification
+What is happening here is that we are building a JSON-encoded modification
 report and are sending it as a notification using `pg_notify` function which
 also takes a channel name (where "a channel" is just a way of separating the
 notifications, not related to
@@ -211,9 +215,9 @@ handler whenever any `INSERT`, `UPDATE` or `DELETE` on `todos` table is
 performed.
 
 And that is it, that's all the setup you need to have on the database side. You
-can even try it out via `psql` and make sure it works: perform some updates in
-your Phoenix and run `LISTEN todos_changes;`. You should see notifications
-coming right away.
+can even try it out via `psql` and make sure it works: start your Phoenix server,
+perform some updates via your application and run `LISTEN todos_changes;`. You
+should see notifications coming in right away.
 
 ## Handling Postgres notifications within your Phoenix application
 
@@ -340,8 +344,8 @@ So, what we managed to do here is to implement the same real-time example
 functionality with PostgreSQL as we
 [had previously implemented](https://github.com/bredikhin/phoenix-rethinkdb-elm-webpack-example)
 using RethinkDB. Does it mean these two databases are completely
-interchangeable when it comes to building real-time specific applications?
-It obviously does not. Then which one should we use over another? Given the
+interchangeable when it comes to building real-time applications? It
+obviously does not. Then which one should we use over another? Given the
 fact that our example is very basic and no benchmarking whatsoever is
 provided, I just can't advise you for or against any of these two. Let's,
 however, look at the facts:
@@ -356,8 +360,8 @@ to extremes, since every task requires choosing appropriate database engine
 based on its specifics, and there's no universal solution here;
 - in terms of development, the approaches to the real-time functionality
 these two databases take are somewhat different: LISTEN / NOTIFY / TRIGGER
-mechanism is more low-level, whereas changefeeds give you in a sense more
-flexibility while designing and developing your application;
+mechanism is more low-level, whereas changefeeds give you in a certain sense
+more flexibility while designing and developing your application;
 - finally, yes, Postgres is mature and reliable, it has a solid production
 record and is backed by an experienced community with an impressive list of
 sponsors, but maybe the fact that RethinkDB is relatively young is not such
