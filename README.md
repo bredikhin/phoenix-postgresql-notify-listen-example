@@ -41,7 +41,7 @@ the first time as well);
 - add the frontend Elm app: `git remote add example git@github.com:bredikhin/phoenix-rethinkdb-elm-webpack-example.git && git fetch example && git checkout example/master elm`;
 - get Elm dependencies: `cd elm && elm package install -y && cd ..`;
 - switch the CSS file: `git checkout example/master assets/css/app.css`;
-- clean up the page template in `lib/pgsub/web/templates/layout/app.html.eex`:
+- clean up the page template in `lib/pgsub_web/templates/layout/app.html.eex`:
 ```
 ...
   <body>
@@ -56,17 +56,17 @@ let Elm = require('../../elm/Todo.elm')
 let todomvc = Elm.Todo.fullscreen()
 ```
 - create a channel: `mix phx.gen.channel Todo`;
-- add your channel to the socket handler in `lib/pgsub/web/channels/user_socket.ex`:
-`channel "todo:*", Pgsub.Web.TodoChannel`.
+- add your channel to the socket handler in `lib/pgsub_web/channels/user_socket.ex`:
+`channel "todo:*", PgsubWeb.TodoChannel`.
 
 ## Ecto and channel broadcasting
 
 Now that we are done with the common part of the setup, let's see how to handle
 messages from our client on the server side. Let's replace the content of
-`lib/pgsub/web/channels/todo_channel.ex` with the following:
+`lib/pgsub_web/channels/todo_channel.ex` with the following:
 ```
-defmodule Pgsub.Web.TodoChannel do
-  use Pgsub.Web, :channel
+defmodule PgsubWeb.TodoChannel do
+  use PgsubWeb, :channel
   alias Pgsub.Pgsub.Todo
   alias Pgsub.Repo
 
@@ -121,12 +121,28 @@ defmodule Pgsub.Web.TodoChannel do
 
   defp broadcast_all_to!(socket) do
     todos = Todo |> Repo.all
-    Pgsub.Web.Endpoint.broadcast!(socket.topic, "todos", %{todos: todos})
+    PgsubWWeb.Endpoint.broadcast!(socket.topic, "todos", %{todos: todos})
   end
 end
 ```
 
-It's looking slightly different from
+We also need to add the following encoder implementation to
+`lib/pgsub/pgsub/todo.ex`:
+```
+defimpl Poison.Encoder, for: Pgsub.Pgsub.Todo do
+  def encode(%{__struct__: _} = struct, options) do
+    map = struct
+          |> Map.from_struct
+          |> Map.drop([:__meta__, :__struct__])
+    Poison.Encoder.Map.encode(map, options)
+  end
+end
+```
+This piece, essentially, strips our `Todo` structure from the meta fields
+(`__meta__`, `__struct__`) to help `Poison` encode it properly, so we could
+send it over the wire.
+
+It's all looking slightly different from
 [the RethinkDB example](https://github.com/bredikhin/phoenix-rethinkdb-elm-webpack-example/blob/0ee47fdbcc8db93c9e2f909cd6d7e6c56c9ac699/lib/rephink/web/channels/todo_channel.ex),
 but the good news is that thanks to the power of Ecto the code we just wrote
 will work with a great number of database engines having Ecto adapters. Isn't
@@ -264,18 +280,18 @@ defmodule Pgsub.Notifications do
       "DELETE" -> Enum.filter(data,  &(&1.id !== id))
     end
 
-    Pgsub.Web.Endpoint.broadcast!(@topic, "todos", %{todos: updated_data})
+    PgsubWeb.Endpoint.broadcast!(@topic, "todos", %{todos: updated_data})
 
     {:noreply, {pid, ref, channel, updated_data}}
   end
 end
 ```
 Note that the module itself is just a `GenServer` holding all the records in
-its state and updating them whenever it gets a notification from the database.
-Also, `channel` here is, once again, a Postgres notification channel, not
-related to Phoenix channels we're using to communicate between Elm and our
-server. Finally, don't forget to add a corresponding worker to the main
-supervision tree in `lib/pgsub/application.ex`:
+its state, updating them whenever it gets a notification from the database
+and broadcasting the updated data. Also, `channel` here is, once again, a
+Postgres notification channel, not related to Phoenix channels we're using
+to communicate between Elm and our server. Finally, don't forget to add a
+corresponding worker to the main supervision tree in `lib/pgsub/application.ex`:
 ```
 worker(Pgsub.Notifications, ["todos_changes"], id: :todos_changes),
 ```
@@ -288,8 +304,8 @@ broadcasts current list of entries every time it gets updated via the
 application itself. Let's remove it (putting the complete listing here for
 sake of simplicity):
 ```
-defmodule Pgsub.Web.TodoChannel do
-  use Pgsub.Web, :channel
+defmodule PgsubWeb.TodoChannel do
+  use PgsubWeb, :channel
   alias Pgsub.{Pgsub.Todo, Repo}
 
   def join("todo:list", payload, socket) do
@@ -302,7 +318,7 @@ defmodule Pgsub.Web.TodoChannel do
 
   def handle_in("todos", _payload, socket) do
     todos = Todo |> Repo.all
-    Pgsub.Web.Endpoint.broadcast!(socket.topic, "todos", %{todos: todos})
+    PgsubWeb.Endpoint.broadcast!(socket.topic, "todos", %{todos: todos})
 
     {:noreply, socket}
   end
