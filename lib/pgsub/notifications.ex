@@ -1,25 +1,18 @@
 defmodule Pgsub.Notifications do
   use GenServer
   alias Pgsub.{Pgsub.Todo, Repo}
-
   import Poison, only: [decode!: 1]
-
   def start_link(channel) do
     GenServer.start_link(__MODULE__, channel)
   end
-
   def init(channel) do
     {:ok, pid} = Application.get_env(:pgsub, Pgsub.Repo)
       |> Postgrex.Notifications.start_link()
     ref = Postgrex.Notifications.listen!(pid, channel)
-
     data = Todo |> Repo.all
-
     {:ok, {pid, ref, channel, data}}
   end
-
   @topic "todo:list"
-
   def handle_info({:notification, pid, ref, "todos_changes", payload}, {pid, ref, channel, data}) do
     %{
       "data" => raw,
@@ -33,9 +26,7 @@ defmodule Pgsub.Notifications do
       "INSERT" -> data ++ [struct(Todo, row)]
       "DELETE" -> Enum.filter(data,  &(&1.id !== id))
     end
-
-    Pgsub.Web.Endpoint.broadcast!(@topic, "todos", %{todos: updated_data})
-
+    PgsubWeb.Endpoint.broadcast!(@topic, "todos", %{todos: updated_data})
     {:noreply, {pid, ref, channel, updated_data}}
   end
 end

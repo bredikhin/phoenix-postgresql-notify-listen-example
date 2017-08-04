@@ -1,5 +1,5 @@
-defmodule Pgsub.Web.ErrorView do
-  use Pgsub.Web, :view
+defmodule PgsubWeb.ErrorView do
+  use PgsubWeb, :view
 
   def render("404.html", _assigns) do
     "Page not found"

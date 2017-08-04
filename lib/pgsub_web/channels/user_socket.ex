@@ -1,9 +1,9 @@
-defmodule Pgsub.Web.UserSocket do
+defmodule PgsubWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", Pgsub.Web.RoomChannel
-  channel "todo:*", Pgsub.Web.TodoChannel
+  # channel "room:*", PgsubWeb.RoomChannel
+  channel "todo:*", PgsubWeb.TodoChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
@@ -31,7 +31,7 @@ defmodule Pgsub.Web.UserSocket do
   # Would allow you to broadcast a "disconnect" event and terminate
   # all active sockets and channels for a given user:
   #
-  #     Pgsub.Web.Endpoint.broadcast("user_socket:#{user.id}", "disconnect", %{})
+  #     PgsubWeb.Endpoint.broadcast("user_socket:#{user.id}", "disconnect", %{})
   #
   # Returning `nil` makes this socket anonymous.
   def id(_socket), do: nil

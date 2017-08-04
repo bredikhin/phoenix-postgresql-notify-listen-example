@@ -6,7 +6,7 @@ use Mix.Config
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
-config :pgsub, Pgsub.Web.Endpoint,
+config :pgsub, PgsubWeb.Endpoint,
   http: [port: 4000],
   debug_errors: true,
   code_reloader: true,
@@ -30,13 +30,13 @@ config :pgsub, Pgsub.Web.Endpoint,
 # different ports.
 
 # Watch static and templates for browser reloading.
-config :pgsub, Pgsub.Web.Endpoint,
+config :pgsub, PgsubWeb.Endpoint,
   live_reload: [
     patterns: [
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
       ~r{priv/gettext/.*(po)$},
-      ~r{lib/pgsub/web/views/.*(ex)$},
-      ~r{lib/pgsub/web/templates/.*(eex)$}
+      ~r{lib/pgsub_web/views/.*(ex)$},
+      ~r{lib/pgsub_web/templates/.*(eex)$}
     ]
   ]
 

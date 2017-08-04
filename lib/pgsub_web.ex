@@ -1,44 +1,45 @@
-defmodule Pgsub.Web do
+defmodule PgsubWeb do
   @moduledoc """
-  A module that keeps using definitions for controllers,
-  views and so on.
+  The entrypoint for defining your web interface, such
+  as controllers, views, channels and so on.
 
   This can be used in your application as:
 
-      use Pgsub.Web, :controller
-      use Pgsub.Web, :view
+      use PgsubWeb, :controller
+      use PgsubWeb, :view
 
   The definitions below will be executed for every view,
   controller, etc, so keep them short and clean, focused
   on imports, uses and aliases.
 
   Do NOT define functions inside the quoted expressions
-  below.
+  below. Instead, define any helper function in modules
+  and import those modules here.
   """
 
   def controller do
     quote do
-      use Phoenix.Controller, namespace: Pgsub.Web
+      use Phoenix.Controller, namespace: PgsubWeb
       import Plug.Conn
-      import Pgsub.Web.Router.Helpers
-      import Pgsub.Web.Gettext
+      import PgsubWeb.Router.Helpers
+      import PgsubWeb.Gettext
     end
   end
 
   def view do
     quote do
-      use Phoenix.View, root: "lib/pgsub/web/templates",
-                        namespace: Pgsub.Web
+      use Phoenix.View, root: "lib/pgsub_web/templates",
+                        namespace: PgsubWeb
 
       # Import convenience functions from controllers
-      import Phoenix.Controller, only: [get_csrf_token: 0, get_flash: 2, view_module: 1]
+      import Phoenix.Controller, only: [get_flash: 2, view_module: 1]
 
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
 
-      import Pgsub.Web.Router.Helpers
-      import Pgsub.Web.ErrorHelpers
-      import Pgsub.Web.Gettext
+      import PgsubWeb.Router.Helpers
+      import PgsubWeb.ErrorHelpers
+      import PgsubWeb.Gettext
     end
   end
 
@@ -53,7 +54,7 @@ defmodule Pgsub.Web do
   def channel do
     quote do
       use Phoenix.Channel
-      import Pgsub.Web.Gettext
+      import PgsubWeb.Gettext
     end
   end
 

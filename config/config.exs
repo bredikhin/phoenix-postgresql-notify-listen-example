@@ -10,10 +10,10 @@ config :pgsub,
   ecto_repos: [Pgsub.Repo]
 
 # Configures the endpoint
-config :pgsub, Pgsub.Web.Endpoint,
+config :pgsub, PgsubWeb.Endpoint,
   url: [host: "localhost"],
-  secret_key_base: "8FneZu4gGXcrXK0YdFj0V5144VNJUy3A1DRxiNRotKxHf74JrtRdLVqhI+Knyx2+",
-  render_errors: [view: Pgsub.Web.ErrorView, accepts: ~w(html json)],
+  secret_key_base: "E7v6Ijq/IytFiTXzQFeeFSgW52YB1KKqXyjHhJPlcwFY58E0szM/DgYNmlMXHRmp",
+  render_errors: [view: PgsubWeb.ErrorView, accepts: ~w(html json)],
   pubsub: [name: Pgsub.PubSub,
            adapter: Phoenix.PubSub.PG2]
 

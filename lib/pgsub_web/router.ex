@@ -1,5 +1,5 @@
-defmodule Pgsub.Web.Router do
-  use Pgsub.Web, :router
+defmodule PgsubWeb.Router do
+  use PgsubWeb, :router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -13,14 +13,14 @@ defmodule Pgsub.Web.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", Pgsub.Web do
+  scope "/", PgsubWeb do
     pipe_through :browser # Use the default browser stack
 
     get "/", PageController, :index
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", Pgsub.Web do
+  # scope "/api", PgsubWeb do
   #   pipe_through :api
   # end
 end

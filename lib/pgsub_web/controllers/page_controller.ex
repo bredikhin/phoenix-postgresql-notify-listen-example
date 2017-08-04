@@ -1,5 +1,5 @@
-defmodule Pgsub.Web.PageController do
-  use Pgsub.Web, :controller
+defmodule PgsubWeb.PageController do
+  use PgsubWeb, :controller
 
   def index(conn, _params) do
     render conn, "index.html"
